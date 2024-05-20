@@ -1,0 +1,45 @@
+services:
+  app:
+    build: .
+    depends_on:
+      - redis
+      - db
+    links:
+      - redis
+    command: npm run dev
+    ports:
+      - "5555:5555"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      NODE_ENV: dev
+      PORT: 5555
+    networks:
+      - default
+
+  db:
+    image: postgres:16.3-alpine
+    hostname: db
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "root"
+      POSTGRES_DB: "users"
+      PGUSER: "postgres"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - 6379:6379
+    depends_on:
+      - db
+    networks:
+      - default
